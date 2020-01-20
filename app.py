@@ -24,11 +24,23 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:dbpass@localhost:5432/fyyur'
 
-# TODO: connect to a local postgresql database
+# TODO: connect to a local postgresql database 
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
+
+Shows = db.Table('Shows',
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('Artist_id', db.Integer, db.ForeignKey('Artist.id')),
+    db.Column('Venue_id', db.Integer, db.ForeignKey('Venue.id')),
+    db.Column('start_time', db.DateTime, default=datetime.utcnow())
+  
+  )
+
+def __repr__(self):
+  return "<Shows: {}>".format(self.Venue_id, self.Artist_id)
+
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
@@ -39,9 +51,28 @@ class Venue(db.Model):
     state = db.Column(db.String(120), nullable=False)
     address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String(120)))
+    website = db.Column(db.String(500), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
     facebook_link = db.Column(db.String(120), nullable=False)
+    seeking_talent = db.Column(db.Boolean, default=False)
+    seeking_description = db.Column(db.String(500), nullable=False)
     Artist = db.relationship('Artist', backref='Venue', lazy=True)
+    
+@property #List Past Events
+def past_events(self):
+  now = datetime.now()
+  past_events = [x for x in self.events if datetime.strptime(
+  x.start_time, '%Y-%m-%dT%H:%M:%S.%fZ') < now]
+  return past_events
+
+@property #Number of Past Events
+def past_events_count(self):
+  return len(self.past_events)
+
+
+def __repr__(self):
+  return "<Venue: {}>".format(self.name)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -53,12 +84,40 @@ class Artist(db.Model):
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
-    genres = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String(120)))
     image_link = db.Column(db.String(500), nullable=False)
     facebook_link = db.Column(db.String(120), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=True)
+    seeking_venue = db.Column(db.String(120), nullable=False)
+    seeking_description = db.Column(db.String(500), nullable=False)
+    shows_id = db.Column(db.Integer, db.ForeignKey('Shows.id'), nullable=True)
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+def __repr__(self):
+  return "<Artist: {}>".format(self.name)
+
+@property #List Past Events
+def past_events(self):
+  now = datetime.now()
+  past_events = [x for x in self.events if datetime.strptime(
+  x.start_time, '%Y-%m-%dT%H:%M:%S.%fZ') < now]
+  return past_events
+
+@property #Number of Past Events
+def past_events_count(self):
+  return len(self.past_events)
+
+#class Shows(db.model):
+ # __tablename__ = 'Shows'
+
+  #id = db.Column(db.Integer, primary_key=True)
+  #venue_id = (db.Integer, ForeignKey=True)
+  #venue_name = (db.String(120), ForeignKey=True)
+  #artist_id = (db.Integer, ForeignKey=True)
+  #artist_name = (db.String(120), ForeignKey=True)
+  #artist_image_link = (db.String(500), ForeignKey=True)
+  #start_time = (db.DateTime, default=datetime.utcnow()))
+    
+
+# TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
@@ -83,7 +142,6 @@ app.jinja_env.filters['datetime'] = format_datetime
 @app.route('/')
 def index():
   return render_template('pages/home.html')
-
 
 #  Venues
 #  ----------------------------------------------------------------
