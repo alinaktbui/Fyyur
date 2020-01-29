@@ -32,10 +32,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:dbpass@localhost:54
 
 Shows = db.Table('Shows',
     db.Column('id', db.Integer, primary_key=True),
-    db.Column('Artist_id', db.Integer, db.ForeignKey('Artist.id')),
-    db.Column('Venue_id', db.Integer, db.ForeignKey('Venue.id')),
-    db.Column('start_time', db.DateTime, default=datetime.utcnow())
-  
+    db.Column('Artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+    db.Column('Venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
+
   )
 
 def __repr__(self):
@@ -57,7 +56,7 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(500), nullable=False)
-    Artist = db.relationship('Artist', backref='Venue', lazy=True)
+    artist_id = db.relationship('Artist', secondary='Shows', backref= db.backref('Venue', lazy=True))
     
 @property #List Past Events
 def past_events(self):
@@ -89,7 +88,7 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_venue = db.Column(db.String(120), nullable=False)
     seeking_description = db.Column(db.String(500), nullable=False)
-    shows_id = db.Column(db.Integer, db.ForeignKey('Shows.id'), nullable=True)
+   
 
 def __repr__(self):
   return "<Artist: {}>".format(self.name)
@@ -105,20 +104,19 @@ def past_events(self):
 def past_events_count(self):
   return len(self.past_events)
 
-#class Shows(db.model):
- # __tablename__ = 'Shows'
+#class Shows(db.Model):
+  #__tablename__ = 'Shows'
 
-  #id = db.Column(db.Integer, primary_key=True)
-  #venue_id = (db.Integer, ForeignKey=True)
-  #venue_name = (db.String(120), ForeignKey=True)
-  #artist_id = (db.Integer, ForeignKey=True)
-  #artist_name = (db.String(120), ForeignKey=True)
-  #artist_image_link = (db.String(500), ForeignKey=True)
-  #start_time = (db.DateTime, default=datetime.utcnow()))
+  #id = db.Column(db.Integer, db.ForeignKey)
+  #venue_id = (db.Integer)
+  #venue_name = (db.String(120))
+  #artist_id = (db.Integer)
+  #artist_name = (db.String(120))
+  #artist_image_link = (db.String(500))
+  #start_time = (db.DateTime)
     
 
 # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
@@ -143,41 +141,28 @@ app.jinja_env.filters['datetime'] = format_datetime
 def index():
   return render_template('pages/home.html')
 
+
 #  Venues
 #  ----------------------------------------------------------------
 
-@app.route('/venues')
-def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+@app.route('/venues') 
+def venues(): 
+  unique_city_states = Venue.query.with_entities( Venue.city, Venue.state).distinct().all() # What is this function doing? 
+  data = [] 
+  for cs in unique_city_states: 
+    venues = Venue.query.filter_by(city=cs[0], state=cs[1]).all() # What is this function doing? 
+    data.append({'city': cs[0], 'state': cs[1], 'venues': venues}) # What is this function doing? 
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  input_search = request.form.get('input_search', None)
+  books = Book.query.filter(
+  Book.name.like('%{}%'.format(input_search))).all()
+  count_books = len(books)
   response={
     "count": 1,
     "data": [{
