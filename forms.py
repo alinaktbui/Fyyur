@@ -110,6 +110,7 @@ class VenueForm(Form):
             ('Reggae', 'Reggae'),
             ('Rock n Roll', 'Rock n Roll'),
             ('Soul', 'Soul'),
+            ('Worship', 'Worship'),
             ('Other', 'Other'),
         ]
     )
@@ -209,6 +210,7 @@ class ArtistForm(Form):
             ('Reggae', 'Reggae'),
             ('Rock n Roll', 'Rock n Roll'),
             ('Soul', 'Soul'),
+            ('Worship', 'Worship'),
             ('Other', 'Other'),
         ]
     )
