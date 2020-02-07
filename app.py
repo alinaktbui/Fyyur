@@ -30,18 +30,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:dbpass@localhost:54
 # Models.
 #----------------------------------------------------------------------------#
 
-Shows = db.Table('Shows',
-    db.Column('Venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
-    db.Column('Artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+shows = db.Table('shows',
+    db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), primary_key=True),
+    db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), primary_key=True),
+    db.Column('start_time', db.DateTime())
 
   )
 
 def __repr__(self):
-  return "<Shows: {}>".format(self.venue_id, self.artist_id)
+  return "<shows: {}>".format(self.venue_id, self.artist_id)
 
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
@@ -55,8 +56,8 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(500), nullable=False)
-    artist = db.relationship('Artist', secondary='Shows', backref= db.backref('venues', lazy=True))
-    
+  
+
 @property #List Past Events
 def past_events(self):
   now = datetime.now()
@@ -70,12 +71,12 @@ def past_events_count(self):
 
 
 def __repr__(self):
-  return "<Venue: {}>".format(self.name)
+  return "<venue: {}>".format(self.name)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artist'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
@@ -88,10 +89,12 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_venue = db.Column(db.String(120), nullable=False)
     seeking_description = db.Column(db.String(500), nullable=False)
-   
+    venue = db.relationship('Venue', secondary='shows', backref = db.backref('artists', lazy=True))
+    # artist = db.relationship('Artist', secondary='shows', backref= db.backref('venues', lazy=True))
+
 
 def __repr__(self):
-  return "<Artist: {}>".format(self.name)
+  return "<artist: {}>".format(self.name)
 
 @property #List Past Events
 def past_events(self):
@@ -164,9 +167,9 @@ def search_venues():
   # search for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
   
-  input_search = Venue.request.form.get('input_search', None)
-  search_venues = Venue.query.filter(
-  Venue.name.like('%{}%'.format(input_search))).all()
+  input_search = venue.request.form.get('input_search', None)
+  search_venues = venue.query.filter(
+  venue.name.like('%{}%'.format(input_search))).all()
   results_count = len(results)
 
   response={
@@ -180,8 +183,8 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
 
-  venue = Venue.query.get(venue_id)
-  return render_template ('pages/show_venue.html', venue=venue)
+  venues = Venue.query.get(venue_id)
+  return render_template ('pages/show_venue.html', venue=venues)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -240,8 +243,8 @@ def show_artist(artist_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
 
-  artist = Artist.query.get(artist_id)
-  return render_template('pages/show_artist.html', artist=artist)
+  artists = Artist.query.get(artist_id)
+  return render_template('pages/show_artist.html', artist=artists)
 
 #  Update
 #  ----------------------------------------------------------------
@@ -325,8 +328,8 @@ def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  shows = Shows.query.all()
-  return render_template('pages/shows.html', shows=shows)
+  show = shows.query.all()
+  return render_template('pages/shows.html', shows=show)
 
 @app.route('/shows/create')
 def create_shows():
