@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 4c3ceba70224
-Revises: 16fff06627e7
-Create Date: 2020-02-04 22:39:23.125297
+Revision ID: 6f28d80bad08
+Revises: 4c3ceba70224
+Create Date: 2020-02-10 21:08:24.591647
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4c3ceba70224'
-down_revision = '16fff06627e7'
+revision = '6f28d80bad08'
+down_revision = '4c3ceba70224'
 branch_labels = None
 depends_on = None
 
@@ -24,7 +24,6 @@ def upgrade():
     op.alter_column('artist', 'seeking_venue',
                existing_type=sa.VARCHAR(length=120),
                nullable=True)
-    op.add_column('shows', sa.Column('start_time', sa.DateTime(), nullable=True))
     op.alter_column('venue', 'seeking_description',
                existing_type=sa.VARCHAR(length=500),
                nullable=True)
@@ -36,7 +35,6 @@ def downgrade():
     op.alter_column('venue', 'seeking_description',
                existing_type=sa.VARCHAR(length=500),
                nullable=True)
-    op.drop_column('shows', 'start_time')
     op.alter_column('artist', 'seeking_venue',
                existing_type=sa.VARCHAR(length=120),
                nullable=True)

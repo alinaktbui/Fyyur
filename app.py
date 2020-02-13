@@ -37,8 +37,8 @@ shows = db.Table('shows',
 
   )
 
-def __repr__(self):
-  return "<shows: {}>".format(self.venue_id, self.artist_id)
+#def __repr__(self):
+  #return "<shows: {}>".format(self.venue_id, self.artist_id)
 
 
 class Venue(db.Model):
@@ -56,7 +56,11 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(500), nullable=False)
+    past_shows = db.Column()
+    artist = db.relationship('Artist', secondary='shows', backref = db.backref('venues', lazy=True)) 
   
+def __repr__(self):
+  return "<venue: {}>".format(self.name)
 
 @property #List Past Events
 def past_events(self):
@@ -68,10 +72,6 @@ def past_events(self):
 @property #Number of Past Events
 def past_events_count(self):
   return len(self.past_events)
-
-
-def __repr__(self):
-  return "<venue: {}>".format(self.name)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -89,7 +89,6 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120), nullable=False)
     seeking_venue = db.Column(db.String(120), nullable=False)
     seeking_description = db.Column(db.String(500), nullable=False)
-    venue = db.relationship('Venue', secondary='shows', backref = db.backref('artists', lazy=True))
     # artist = db.relationship('Artist', secondary='shows', backref= db.backref('venues', lazy=True))
 
 
@@ -110,14 +109,11 @@ def past_events_count(self):
 #class Shows(db.Model):
   #__tablename__ = 'Shows'
 
-  #id = db.Column(db.Integer, db.ForeignKey)
-  #venue_id = (db.Integer)
-  #venue_name = (db.String(120))
-  #artist_id = (db.Integer)
-  #artist_name = (db.String(120))
-  #artist_image_link = (db.String(500))
-  #start_time = (db.DateTime)
-    
+  #id = db.Column(db.Integer, primary_key=True)
+  #venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=True)
+  #artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=True)
+  
+
 
 # TODO: implement any missing fields, as a database migration using Flask-Migrate
         # Lesson 6: Migrations - Flask-Migrate Part II Video
@@ -328,8 +324,8 @@ def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  show = shows.query.all()
-  return render_template('pages/shows.html', shows=show)
+  show = shows.query.all(artist_id)
+  return render_template('pages/shows.html', show=show)
 
 @app.route('/shows/create')
 def create_shows():
